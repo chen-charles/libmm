@@ -1,25 +1,8 @@
 /*
-library Memory Management --- connecting hardware mmu with kernel level memory management
-Copyright (C) 2016  Jianye Chen
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-/*
-libmm
+library Memory Management
 HAL Core Component
 
+libmm connects hardware mmu with kernel level memory management
 libmm requires a "description" of the low level paging mechanics to provide direct memory mapping
 libmm provides the mmap/munmap interface
 */
@@ -27,13 +10,8 @@ libmm provides the mmap/munmap interface
 #ifndef LIB_MM
 #define LIB_MM
 
-/* uncomment this for testing purposes */
-//#define _libmm_test_
-
-#include <string.h>
-#include "type.h"
-#include "bit_op.h"
-
+#include <klib_sl/type.h>
+#include <klib_sl/c/klib_sl.h>
 
 #ifndef uintreg_t
 typedef uintptr_t uintreg_t;
@@ -97,6 +75,17 @@ if page is not present, return value MUST be ZERO.
 VIRTUAL_ADDRESS read_page(PHYSICAL_ADDRESS from, page_property* properties);
 VIRTUAL_ADDRESS write_page(PHYSICAL_ADDRESS from, VIRTUAL_ADDRESS to, page_property* properties);
 void flush_page(PHYSICAL_ADDRESS from);
+
+/*
+optional lookup requisites
+#define USING_LOOKUP 
+*/
+#ifdef USING_LOOKUP
+VIRTUAL_ADDRESS lookup_phys_to_virt(PHYSICAL_ADDRESS phys);
+PHYSICAL_ADDRESS lookup_virt_to_phys(VIRTUAL_ADDRESS virt);
+#else
+#warning "USING_LOOKUP is not defined, munmap is working in low efficiency mode"
+#endif
 
 /* END REQUIRED INTERFACE */
 

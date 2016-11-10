@@ -1,21 +1,3 @@
-/*
-library Memory Management --- connecting hardware mmu with kernel level memory management
-Copyright (C) 2016  Jianye Chen
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 #include    "libmm.h"
 /*
 libmm
@@ -132,7 +114,7 @@ uintptr_t MM_init(size_t szMemory, size_t szPage, size_t nInusePages, uintptr_t*
     
     for(int i=0; i<nInusePages; i++)
         flipPhyPGAvl(((*(pInusePages+i)) & (uintptr_t)(-0x10)), dath);
-
+    
     // TODO: add more layers to this structure
     return (uintptr_t)dath;
 }
@@ -200,22 +182,37 @@ void *MM_mmap(void* addr, size_t len, page_property* usage, MM_Data_Section_H* p
         flush_page(nextPG);
     }
 
-    return (void*)virtPG_begin;
+    return (void*)(virtPG_begin*(pMMDatSec->szPage));
 }
 
 // no security check
 int MM_munmap(void* addr, size_t len, MM_Data_Section_H* pMMDatSec)
 {
     // find page boundaries 
-    VIRTUAL_ADDRESS virtPG_begin = ((uintptr_t)addr)/(pMMDatSec->szPage);
-    VIRTUAL_ADDRESS virtPG_end = ((uintptr_t)addr + len + pMMDatSec->szPage - 1)/(pMMDatSec->szPage); // take this end
+    VIRTUAL_ADDRESS virt_begin = ((uintptr_t)addr) - ((uintptr_t)addr)%(pMMDatSec->szPage);
+    VIRTUAL_ADDRESS virt_end = ((uintptr_t)addr + len + pMMDatSec->szPage - 1)/(pMMDatSec->szPage)*(pMMDatSec->szPage); // take this end
 
+
+#ifdef USING_LOOKUP
+    page_property property;
+    property.required.present = false;
+    for(VIRTUAL_ADDRESS i=virt_begin; i<=virt_end; i+=(pMMDatSec->szPage))
+    {
+        PHYSICAL_ADDRESS phys;
+        phys = lookup_virt_to_phys(i);
+        flipPhyPGAvl(phys, pMMDatSec);
+        write_page(phys, phys, &property);
+        flush_page(phys);
+    }
+#else
+    // it should be fairly straight forward to implement a O(1) algorithm for this
     for(uintptr_t paddr=0; paddr<pMMDatSec->szPage * pMMDatSec->nPages; paddr+=pMMDatSec->szPage)
     {
         page_property property;
-        VIRTUAL_ADDRESS cur = read_page(paddr, &property) / (pMMDatSec->szPage);
+        VIRTUAL_ADDRESS cur = read_page(paddr, &property);
+        if (!cur) continue;
         // for thread safety and multiple-mmap-one-munmap, allow mmap in random order
-        for(VIRTUAL_ADDRESS i=virtPG_begin; i<=virtPG_end; i++)
+        for(VIRTUAL_ADDRESS i=virt_begin; i<=virt_end; i+=(pMMDatSec->szPage))
         {
             if (cur == i)
             {
@@ -226,6 +223,7 @@ int MM_munmap(void* addr, size_t len, MM_Data_Section_H* pMMDatSec)
             }
         }
     }
+#endif
 
     return 0;
 }
