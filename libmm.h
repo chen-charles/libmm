@@ -10,8 +10,9 @@ libmm provides the mmap/munmap interface
 #ifndef LIB_MM
 #define LIB_MM
 
-#include <klib_sl/type.h>
-#include <klib_sl/c/klib_sl.h>
+#include <string.h>
+#include "type.h"
+#include "bit_op.h"
 
 #ifndef uintreg_t
 typedef uintptr_t uintreg_t;
