@@ -1,5 +1,7 @@
-#ifndef _LIB_TYPE_H_
-#define _LIB_TYPE_H_
+// Copyright 2016 Jianye Chen All Rights Reserved.
+
+#ifndef _KLIB_TYPE_H_
+#define _KLIB_TYPE_H_
 
 //Conventions
 #include	<stdint.h>

@@ -25,7 +25,8 @@ libmm provides the mmap/munmap interface
 #ifndef LIB_MM
 #define LIB_MM
 
-#include <string.h>
+#define USING_LOOKUP
+
 #include "type.h"
 #include "bit_op.h"
 
@@ -35,6 +36,10 @@ typedef uintptr_t uintreg_t;
 
 #ifndef IMMEDIATE_SETBIT
 #define IMMEDIATE_SETBIT(pos) (1<<pos)
+#endif
+
+#ifndef memset
+void* memset(void* ptr, int value, size_t num);
 #endif
 
 /*
@@ -67,6 +72,7 @@ typedef uintptr_t PHYSICAL_ADDRESS;
 typedef uintptr_t VIRTUAL_ADDRESS;
 typedef uintptr_t MAPPED_VIRTUAL_ADDRESS;
 
+#ifndef page_property
 typedef struct _pg_prop_req
 {
     bool present;   // present *IFF* page is INUSE or special 
@@ -77,7 +83,6 @@ typedef struct _pg_prop_req
 } 
 page_property_required;
 
-#ifndef page_property
 typedef struct _pg_prop  
 {
     page_property_required required;
@@ -112,7 +117,7 @@ typedef struct _mm_data_section_h
 {
     uintreg_t   magic;  // 0x024D4D03;  begin, M, M, end
     size_t  szDataSec;
-    size_t  szMemory;
+    size_t  nTotalPages;
     size_t  szPage;
     size_t  nPages;
     uintptr_t   pPMemAvl;
@@ -129,9 +134,9 @@ supplied special usage table MUST be sorted at this moment
 */
 
 #ifndef _libmm_test_
-uintptr_t MM_init(size_t szMemory, size_t szPage, size_t nInusePages, uintptr_t* pInusePages);
+uintptr_t MM_init(size_t nTotalPages, size_t szPage, size_t nInusePages, uintptr_t* pInusePages);
 #else
-uintptr_t MM_init(size_t szMemory, size_t szPage, size_t nInusePages, uintptr_t* pInusePages, uintptr_t mbase);
+uintptr_t MM_init(size_t nTotalPages, size_t szPage, size_t nInusePages, uintptr_t* pInusePages, uintptr_t mbase);
 #endif
 
 /* END INITIALIZATION */

@@ -1,5 +1,6 @@
-#ifndef _BIT_OP_H_
-#define _BIT_OP_H_
+#ifndef _KLIB_BIT_OP_H_
+#define _KLIB_BIT_OP_H_
+
 
 /*
 Bitwise immediate operations
@@ -27,6 +28,23 @@ Bitwise modifications
 #define flipbit(pVal,pos) (*(pVal) ^= ((uintptr_t)1<<(pos)))
 #define testbit(pVal,pos) (*(pVal) & ((uintptr_t)1<<(pos)))
 
-
+/*
+inline void setbit(uint32_t* uint_p, uint32_t bit)
+{
+	(*uint_p) |= 1 << bit;
+}
+inline void clearbit(uint32_t* uint_p, uint32_t bit)
+{
+	(*uint_p) &= ~(1 << bit);
+}
+inline void flipbit(uint32_t* uint_p, uint32_t bit)
+{
+	(*uint_p) ^= 1 << bit;
+}
+inline bool testbit(uint32_t* uint_p, uint32_t bit)
+{
+	return (bool)((*uint_p) & (1 << bit));
+}
+*/
 #endif
 

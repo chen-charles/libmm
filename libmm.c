@@ -36,14 +36,14 @@ bool flipPhyPGAvl(uintptr_t pPhysAddr, MM_Data_Section_H* pMMDatSec);
 
 
 #ifndef _libmm_test_
-uintptr_t MM_init(size_t szMemory, size_t szPage, size_t nInusePages, uintptr_t* pInusePages)
+uintptr_t MM_init(size_t nTotalPages, size_t szPage, size_t nInusePages, uintptr_t* pInusePages)
 #define MM_REQUIRED_DATA_SECTION_SIZE   0x400000    /* 4m */
 #else
-uintptr_t MM_init(size_t szMemory, size_t szPage, size_t nInusePages, uintptr_t* pInusePages, uintptr_t mbase)
+uintptr_t MM_init(size_t nTotalPages, size_t szPage, size_t nInusePages, uintptr_t* pInusePages, uintptr_t mbase)
 #define MM_REQUIRED_DATA_SECTION_SIZE   0x4000    /* 16k */
 #endif
 {
-    int totalPages = szMemory/szPage;
+    int totalPages = nTotalPages;
 
     // Required # of pages to be mapped
     int nPages = MM_REQUIRED_DATA_SECTION_SIZE/szPage
@@ -112,10 +112,10 @@ uintptr_t MM_init(size_t szMemory, size_t szPage, size_t nInusePages, uintptr_t*
     memset((void*)dath, 0, sizeof(uintreg_t));
     dath->magic += 0x024D4D03;  //begin, M, M, end
     dath->szDataSec = MM_REQUIRED_DATA_SECTION_SIZE;
-    dath->szMemory = szMemory;
+    dath->nTotalPages = nTotalPages;
     dath->szPage = szPage;
 
-    dath->nPages = szMemory/szPage;
+    dath->nPages = nTotalPages;
 
     // physical memory availibility
     dath->pPMemAvl = pbuf;
@@ -193,7 +193,7 @@ void *MM_mmap(void* addr, size_t len, page_property* usage, MM_Data_Section_H* p
         if (nextPG == -1) return (void*)-1; //  no more available pages
         flipPhyPGAvl(nextPG, pMMDatSec);
         // map it
-        write_page(nextPG, i, usage);
+        write_page(nextPG, i*(pMMDatSec->szPage), usage);
         flush_page(nextPG);
     }
 
